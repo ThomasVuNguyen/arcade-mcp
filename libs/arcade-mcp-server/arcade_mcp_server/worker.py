@@ -27,6 +27,7 @@ from starlette.responses import Response
 from starlette.types import Receive, Scope, Send
 
 from arcade_mcp_server.fastapi.auth_routes import create_auth_router
+from arcade_mcp_server.fastapi.dashboard_routes import create_dashboard_router
 from arcade_mcp_server.fastapi.middleware import AddTrailingSlashToPathMiddleware
 from arcade_mcp_server.logging_utils import setup_logging
 from arcade_mcp_server.resource_server.base import ResourceServerValidator
@@ -232,6 +233,14 @@ def create_arcade_mcp(
 
         auth_router = create_auth_router(resource_server_validator, canonical_url)
         app.include_router(auth_router)
+
+    # Dashboard and Tool Playground UI
+    dashboard_router = create_dashboard_router(
+        catalog=catalog,
+        mcp_settings=mcp_settings,
+        get_mcp_server=lambda: getattr(app.state, "mcp_server", None),
+    )
+    app.include_router(dashboard_router)
 
     # Worker endpoints
     if secret is not None:
