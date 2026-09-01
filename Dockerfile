@@ -5,8 +5,8 @@ RUN useradd -m -u 1000 appuser
 
 WORKDIR /app
 
-# Copy dependency files first
-COPY pyproject.toml uv.lock ./
+# Copy dependency files and required project metadata first
+COPY pyproject.toml uv.lock README.md LICENSE ./
 COPY libs/ ./libs/
 
 # Sync workspace dependencies
@@ -15,7 +15,6 @@ RUN uv sync --frozen --no-dev --extra all
 # Copy tools and application code
 COPY tools/ ./tools/
 COPY examples/ ./examples/
-COPY README.md LICENSE ./
 
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app
