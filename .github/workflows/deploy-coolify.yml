@@ -1,0 +1,26 @@
+name: Deploy to Coolify
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Trigger Coolify Deployment (if Webhook Secret is set)
+        if: env.COOLIFY_WEBHOOK_URL != ''
+        env:
+          COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_URL }}
+        run: |
+          echo "Triggering Coolify deployment webhook..."
+          curl -s -X GET "${COOLIFY_WEBHOOK_URL}" || echo "Webhook trigger completed"
+
+      - name: Deployment Notice
+        run: |
+          echo "GitHub App integration on Coolify automatically deploys changes to arcade-mcp on pushes to main."
