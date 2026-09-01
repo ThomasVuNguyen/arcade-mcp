@@ -3,6 +3,7 @@ credentials.yaml
 docker/credentials.yaml
 .cursor/*
 *.lock
+!uv.lock
 
 # example data
 examples/data
