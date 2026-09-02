@@ -439,84 +439,49 @@
 
   <script>
     // State
-    let cachedTools = [];
-    let cachedOverview = {};
-    let activeTab = 'overview';
+    var cachedTools = [];
+    var cachedOverview = {};
+    var activeTab = 'overview';
 
-    const templates = {
-      basic: `from typing import Annotated
-from arcade_tdk import tool
-
-@tool
-def calculate_sum(a: Annotated[int, "First number"], b: Annotated[int, "Second number"]) -> int:
-    """Calculate the sum of two integers."""
-    return a + b
-`,
-      secrets: `from typing import Annotated
-import httpx
-from arcade_tdk import tool
-from arcade_mcp_server import Context
-
-@tool(requires_secrets=["WEATHER_API_KEY"])
-async def get_weather(context: Context, city: Annotated[str, "City name"]) -> dict:
-    """Fetch current weather using a secret API key."""
-    api_key = context.get_secret("WEATHER_API_KEY")
-    # Call upstream API with api_key
-    return {"city": city, "status": "sunny", "temp_c": 22}
-`,
-      context: `from typing import Annotated
-from arcade_tdk import tool
-from arcade_mcp_server import Context
-
-@tool
-async def long_running_task(context: Context, items_count: Annotated[int, "Number of items"]) -> str:
-    """Example tool demonstrating logging and progress reporting."""
-    await context.log.info(f"Starting task with {items_count} items")
-    return f"Completed processing {items_count} items."
-`
+    var templates = {
+      basic: "from typing import Annotated\nfrom arcade_tdk import tool\n\n@tool\ndef calculate_sum(a: Annotated[int, \"First number\"], b: Annotated[int, \"Second number\"]) -> int:\n    \"\"\"Calculate the sum of two integers.\"\"\"\n    return a + b\n",
+      secrets: "from typing import Annotated\nimport httpx\nfrom arcade_tdk import tool\nfrom arcade_mcp_server import Context\n\n@tool(requires_secrets=[\"WEATHER_API_KEY\"])\nasync def get_weather(context: Context, city: Annotated[str, \"City name\"]) -> dict:\n    \"\"\"Fetch current weather using a secret API key.\"\"\"\n    api_key = context.get_secret(\"WEATHER_API_KEY\")\n    # Call upstream API with api_key\n    return {\"city\": city, \"status\": \"sunny\", \"temp_c\": 22}\n",
+      context: "from typing import Annotated\nfrom arcade_tdk import tool\nfrom arcade_mcp_server import Context\n\n@tool\nasync def long_running_task(context: Context, items_count: Annotated[int, \"Number of items\"]) -> str:\n    \"\"\"Example tool demonstrating logging and progress reporting.\"\"\"\n    await context.log.info(f\"Starting task with {items_count} items\")\n    return f\"Completed processing {items_count} items.\"\n"
     };
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', async () => {
-      lucide.createIcons();
-      loadToolTemplate('basic');
-      await refreshAllData();
-      setInterval(fetchOverview, 10000);
-    });
-
-    async function refreshAllData() {
-      await Promise.all([fetchOverview(), fetchTools(), fetchSecrets(), fetchSnippets()]);
-    }
 
     // Switch Tab
     function switchTab(tab) {
       activeTab = tab;
-      const panels = ['overview', 'tools', 'playground', 'secrets', 'create-tool', 'clients'];
-      panels.forEach(p => {
-        const panelEl = document.getElementById(\`panel-\${p}\`);
-        const tabEl = document.getElementById(\`tab-\${p}\`);
+      var panels = ['overview', 'tools', 'playground', 'secrets', 'create-tool', 'clients'];
+      panels.forEach(function(p) {
+        var panelEl = document.getElementById('panel-' + p);
+        var tabEl = document.getElementById('tab-' + p);
         if (p === tab) {
-          panelEl?.classList.remove('hidden');
-          tabEl?.classList.remove('text-slate-400', 'hover:bg-dark-card');
-          tabEl?.classList.add('text-white', 'bg-violet-600', 'shadow-md', 'shadow-violet-600/20');
+          if (panelEl) panelEl.classList.remove('hidden');
+          if (tabEl) {
+            tabEl.classList.remove('text-slate-400', 'hover:bg-dark-card');
+            tabEl.classList.add('text-white', 'bg-violet-600', 'shadow-md', 'shadow-violet-600/20');
+          }
         } else {
-          panelEl?.classList.add('hidden');
-          tabEl?.classList.add('text-slate-400', 'hover:bg-dark-card');
-          tabEl?.classList.remove('text-white', 'bg-violet-600', 'shadow-md', 'shadow-violet-600/20');
+          if (panelEl) panelEl.classList.add('hidden');
+          if (tabEl) {
+            tabEl.classList.add('text-slate-400', 'hover:bg-dark-card');
+            tabEl.classList.remove('text-white', 'bg-violet-600', 'shadow-md', 'shadow-violet-600/20');
+          }
         }
       });
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
     }
 
     // Fetch Overview
     async function fetchOverview() {
       try {
-        const res = await fetch('/api/dashboard/overview');
+        var res = await fetch('/api/dashboard/overview');
         if (!res.ok) return;
-        const data = await res.json();
+        var data = await res.json();
         cachedOverview = data;
 
-        document.getElementById('version-badge').innerText = \`v\${data.server.version}\`;
+        document.getElementById('version-badge').innerText = 'v' + data.server.version;
         document.getElementById('server-uptime').innerText = data.uptime_formatted;
         document.getElementById('stat-tools').innerText = data.counts.tools;
         document.getElementById('nav-tools-count').innerText = data.counts.tools;
@@ -524,12 +489,12 @@ async def long_running_task(context: Context, items_count: Annotated[int, "Numbe
         document.getElementById('mcp-endpoint-input').value = data.endpoints.mcp;
         document.getElementById('stat-mcp-url').innerText = data.endpoints.mcp;
 
+        var badge = document.getElementById('nav-secrets-badge');
         if (data.counts.missing_secrets > 0) {
-          const badge = document.getElementById('nav-secrets-badge');
           badge.classList.remove('hidden');
-          badge.innerText = \`\${data.counts.missing_secrets} Missing\`;
+          badge.innerText = data.counts.missing_secrets + ' Missing';
         } else {
-          document.getElementById('nav-secrets-badge').classList.add('hidden');
+          badge.classList.add('hidden');
         }
       } catch (err) {
         console.error('Failed to fetch overview:', err);
@@ -539,7 +504,7 @@ async def long_running_task(context: Context, items_count: Annotated[int, "Numbe
     // Fetch Tools
     async function fetchTools() {
       try {
-        const res = await fetch('/api/dashboard/tools');
+        var res = await fetch('/api/dashboard/tools');
         if (!res.ok) return;
         cachedTools = await res.json();
         renderOverviewTools(cachedTools);
@@ -551,82 +516,97 @@ async def long_running_task(context: Context, items_count: Annotated[int, "Numbe
     }
 
     function renderOverviewTools(tools) {
-      const grid = document.getElementById('overview-tools-grid');
+      var grid = document.getElementById('overview-tools-grid');
       if (!grid) return;
-      grid.innerHTML = tools.slice(0, 4).map(t => \`
-        <div class="p-4 rounded-xl glass-panel border border-dark-border space-y-2 hover:border-violet-500/50 transition">
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-white text-sm font-mono">\${t.name}</span>
-            <span class="text-[11px] px-2 py-0.5 rounded bg-violet-950/60 text-violet-400 border border-violet-800/40">\${t.toolkit}</span>
-          </div>
-          <p class="text-xs text-slate-400 line-clamp-2">\${t.description}</p>
-          <div class="pt-2 flex items-center justify-between">
-            <span class="text-[11px] text-slate-500">\${t.parameters.length} parameter(s)</span>
-            <button onclick="openInPlayground('\${t.name}')" class="text-xs text-violet-400 hover:text-violet-300 font-semibold flex items-center space-x-1">
-              <span>Test</span>
-              <i data-lucide="play" class="w-3 h-3"></i>
-            </button>
-          </div>
-        </div>
-      \`).join('');
-      lucide.createIcons();
+      grid.innerHTML = tools.slice(0, 4).map(function(t) {
+        return '<div class="p-4 rounded-xl glass-panel border border-dark-border space-y-2 hover:border-violet-500/50 transition">' +
+          '<div class="flex items-center justify-between">' +
+            '<span class="font-bold text-white text-sm font-mono">' + escapeHtml(t.name) + '</span>' +
+            '<span class="text-[11px] px-2 py-0.5 rounded bg-violet-950/60 text-violet-400 border border-violet-800/40">' + escapeHtml(t.toolkit) + '</span>' +
+          '</div>' +
+          '<p class="text-xs text-slate-400 line-clamp-2">' + escapeHtml(t.description) + '</p>' +
+          '<div class="pt-2 flex items-center justify-between">' +
+            '<span class="text-[11px] text-slate-500">' + t.parameters.length + ' parameter(s)</span>' +
+            '<button onclick="openInPlayground(\'' + escapeHtml(t.name) + '\')" class="text-xs text-violet-400 hover:text-violet-300 font-semibold flex items-center space-x-1">' +
+              '<span>Test</span>' +
+              '<i data-lucide="play" class="w-3 h-3"></i>' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+      if (window.lucide) lucide.createIcons();
     }
 
     function renderToolsCatalog(tools) {
-      const list = document.getElementById('tools-catalog-list');
+      var list = document.getElementById('tools-catalog-list');
       if (!list) return;
       if (tools.length === 0) {
         list.innerHTML = '<div class="p-8 text-center text-slate-500 text-sm">No tools found matching search.</div>';
         return;
       }
-      list.innerHTML = tools.map(t => \`
-        <div class="p-5 rounded-2xl glass-panel border border-dark-border space-y-4 hover:border-violet-500/40 transition">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div class="space-y-1">
-              <div class="flex items-center space-x-2">
-                <span class="text-base font-bold text-white font-mono">\${t.name}</span>
-                <span class="text-xs px-2 py-0.5 rounded bg-violet-950/80 text-violet-400 border border-violet-800/50 font-mono">\${t.toolkit}</span>
-                \${t.required_secrets.length > 0 ? (t.has_all_secrets ? '<span class="text-xs px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/50">Secrets Ready</span>' : '<span class="text-xs px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800/50">Missing Secret</span>') : ''}
-              </div>
-              <p class="text-xs text-slate-400">\${t.description}</p>
-            </div>
-            <button onclick="openInPlayground('\${t.name}')" class="shrink-0 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs transition flex items-center space-x-2 shadow-md shadow-violet-600/20">
-              <i data-lucide="terminal" class="w-3.5 h-3.5"></i>
-              <span>Open in Playground</span>
-            </button>
-          </div>
+      list.innerHTML = tools.map(function(t) {
+        var secretBadge = '';
+        if (t.required_secrets.length > 0) {
+          if (t.has_all_secrets) {
+            secretBadge = '<span class="text-xs px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/50">Secrets Ready</span>';
+          } else {
+            secretBadge = '<span class="text-xs px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800/50">Missing Secret</span>';
+          }
+        }
 
-          \${t.parameters.length > 0 ? \`
-            <div class="pt-3 border-t border-dark-border/60">
-              <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">Parameters</span>
-              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                \${t.parameters.map(p => \`
-                  <div class="bg-dark-bg p-2.5 rounded-lg border border-dark-border text-xs space-y-1">
-                    <div class="flex items-center justify-between">
-                      <span class="font-mono font-semibold text-violet-300">\${p.name}</span>
-                      <span class="text-[10px] text-slate-400 bg-dark-card px-1.5 py-0.5 rounded font-mono">\${p.type}</span>
-                    </div>
-                    <p class="text-[11px] text-slate-400 truncate">\${p.description || 'No description'}</p>
-                  </div>
-                \`).join('')}
-              </div>
-            </div>
-          \` : '<div class="text-[11px] text-slate-500 pt-2">No input arguments required.</div>'}
-        </div>
-      \`).join('');
-      lucide.createIcons();
+        var paramsHtml = '<div class="text-[11px] text-slate-500 pt-2">No input arguments required.</div>';
+        if (t.parameters.length > 0) {
+          var paramsCards = t.parameters.map(function(p) {
+            return '<div class="bg-dark-bg p-2.5 rounded-lg border border-dark-border text-xs space-y-1">' +
+              '<div class="flex items-center justify-between">' +
+                '<span class="font-mono font-semibold text-violet-300">' + escapeHtml(p.name) + '</span>' +
+                '<span class="text-[10px] text-slate-400 bg-dark-card px-1.5 py-0.5 rounded font-mono">' + escapeHtml(p.type) + '</span>' +
+              '</div>' +
+              '<p class="text-[11px] text-slate-400 truncate">' + escapeHtml(p.description || 'No description') + '</p>' +
+            '</div>';
+          }).join('');
+
+          paramsHtml = '<div class="pt-3 border-t border-dark-border/60">' +
+            '<span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">Parameters</span>' +
+            '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">' + paramsCards + '</div>' +
+          '</div>';
+        }
+
+        return '<div class="p-5 rounded-2xl glass-panel border border-dark-border space-y-4 hover:border-violet-500/40 transition">' +
+          '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">' +
+            '<div class="space-y-1">' +
+              '<div class="flex items-center space-x-2">' +
+                '<span class="text-base font-bold text-white font-mono">' + escapeHtml(t.name) + '</span>' +
+                '<span class="text-xs px-2 py-0.5 rounded bg-violet-950/80 text-violet-400 border border-violet-800/50 font-mono">' + escapeHtml(t.toolkit) + '</span>' +
+                secretBadge +
+              '</div>' +
+              '<p class="text-xs text-slate-400">' + escapeHtml(t.description) + '</p>' +
+            '</div>' +
+            '<button onclick="openInPlayground(\'' + escapeHtml(t.name) + '\')" class="shrink-0 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs transition flex items-center space-x-2 shadow-md shadow-violet-600/20">' +
+              '<i data-lucide="terminal" class="w-3.5 h-3.5"></i>' +
+              '<span>Open in Playground</span>' +
+            '</button>' +
+          '</div>' +
+          paramsHtml +
+        '</div>';
+      }).join('');
+      if (window.lucide) lucide.createIcons();
     }
 
     function filterTools() {
-      const q = document.getElementById('tool-search').value.toLowerCase().trim();
-      const filtered = cachedTools.filter(t => t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q) || t.toolkit.toLowerCase().includes(q));
+      var q = document.getElementById('tool-search').value.toLowerCase().trim();
+      var filtered = cachedTools.filter(function(t) {
+        return t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q) || t.toolkit.toLowerCase().includes(q);
+      });
       renderToolsCatalog(filtered);
     }
 
     function populatePlaygroundSelect(tools) {
-      const select = document.getElementById('playground-tool-select');
+      var select = document.getElementById('playground-tool-select');
       if (!select) return;
-      select.innerHTML = tools.map(t => \`<option value="\${t.name}">\${t.name} (\${t.toolkit})</option>\`).join('');
+      select.innerHTML = tools.map(function(t) {
+        return '<option value="' + escapeHtml(t.name) + '">' + escapeHtml(t.name) + ' (' + escapeHtml(t.toolkit) + ')</option>';
+      }).join('');
       if (tools.length > 0) {
         loadToolInPlayground();
       }
@@ -634,7 +614,7 @@ async def long_running_task(context: Context, items_count: Annotated[int, "Numbe
 
     function openInPlayground(toolName) {
       switchTab('playground');
-      const select = document.getElementById('playground-tool-select');
+      var select = document.getElementById('playground-tool-select');
       if (select) {
         select.value = toolName;
         loadToolInPlayground();
@@ -642,64 +622,59 @@ async def long_running_task(context: Context, items_count: Annotated[int, "Numbe
     }
 
     function loadToolInPlayground() {
-      const toolName = document.getElementById('playground-tool-select').value;
-      const tool = cachedTools.find(t => t.name === toolName);
+      var toolName = document.getElementById('playground-tool-select').value;
+      var tool = cachedTools.find(function(t) { return t.name === toolName; });
       if (!tool) return;
 
       document.getElementById('playground-tool-desc').innerText = tool.description || 'No description provided.';
-      const container = document.getElementById('playground-params-container');
+      var container = document.getElementById('playground-params-container');
 
       if (tool.parameters.length === 0) {
         container.innerHTML = '<div class="text-xs text-slate-500 bg-dark-bg p-3 rounded-xl border border-dark-border">This tool takes no parameters. Ready to execute!</div>';
         return;
       }
 
-      container.innerHTML = tool.parameters.map(p => {
-        let inputHtml = '';
+      container.innerHTML = tool.parameters.map(function(p) {
+        var inputHtml = '';
         if (p.type === 'boolean') {
-          inputHtml = \`
-            <select data-param="\${p.name}" data-type="boolean" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-violet-500">
-              <option value="true">true</option>
-              <option value="false">false</option>
-            </select>
-          \`;
+          inputHtml = '<select data-param="' + escapeHtml(p.name) + '" data-type="boolean" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-violet-500">' +
+              '<option value="true">true</option>' +
+              '<option value="false">false</option>' +
+            '</select>';
         } else if (p.enums && p.enums.length > 0) {
-          inputHtml = \`
-            <select data-param="\${p.name}" data-type="string" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-violet-500">
-              \${p.enums.map(e => \`<option value="\${e}">\${e}</option>\`).join('')}
-            </select>
-          \`;
+          var enumOptions = p.enums.map(function(e) { return '<option value="' + escapeHtml(e) + '">' + escapeHtml(e) + '</option>'; }).join('');
+          inputHtml = '<select data-param="' + escapeHtml(p.name) + '" data-type="string" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-violet-500">' +
+              enumOptions +
+            '</select>';
         } else if (p.type === 'integer' || p.type === 'number') {
-          inputHtml = \`<input type="number" data-param="\${p.name}" data-type="\${p.type}" placeholder="e.g. 42" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-violet-500" />\`;
+          inputHtml = '<input type="number" data-param="' + escapeHtml(p.name) + '" data-type="' + escapeHtml(p.type) + '" placeholder="e.g. 42" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-violet-500" />';
         } else {
-          inputHtml = \`<input type="text" data-param="\${p.name}" data-type="string" placeholder="\${p.description || p.name}" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-violet-500" />\`;
+          inputHtml = '<input type="text" data-param="' + escapeHtml(p.name) + '" data-type="string" placeholder="' + escapeHtml(p.description || p.name) + '" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-violet-500" />';
         }
 
-        return \`
-          <div class="space-y-1">
-            <div class="flex items-center justify-between">
-              <label class="text-xs font-mono font-semibold text-violet-300">\${p.name}</label>
-              <span class="text-[10px] text-slate-400 font-mono">\${p.type}\${p.required ? ' *' : ''}</span>
-            </div>
-            \${inputHtml}
-          </div>
-        \`;
+        return '<div class="space-y-1">' +
+            '<div class="flex items-center justify-between">' +
+              '<label class="text-xs font-mono font-semibold text-violet-300">' + escapeHtml(p.name) + '</label>' +
+              '<span class="text-[10px] text-slate-400 font-mono">' + escapeHtml(p.type) + (p.required ? ' *' : '') + '</span>' +
+            '</div>' +
+            inputHtml +
+          '</div>';
       }).join('');
     }
 
     async function executePlaygroundTool() {
-      const toolName = document.getElementById('playground-tool-select').value;
-      const btn = document.getElementById('playground-run-btn');
-      const outputBox = document.getElementById('playground-output-box');
-      const latencyEl = document.getElementById('playground-latency');
+      var toolName = document.getElementById('playground-tool-select').value;
+      var btn = document.getElementById('playground-run-btn');
+      var outputBox = document.getElementById('playground-output-box');
+      var latencyEl = document.getElementById('playground-latency');
 
       // Collect arguments
-      const args = {};
-      const inputs = document.querySelectorAll('#playground-params-container [data-param]');
-      inputs.forEach(input => {
-        const param = input.getAttribute('data-param');
-        const type = input.getAttribute('data-type');
-        let val = input.value;
+      var args = {};
+      var inputs = document.querySelectorAll('#playground-params-container [data-param]');
+      inputs.forEach(function(input) {
+        var param = input.getAttribute('data-param');
+        var type = input.getAttribute('data-type');
+        var val = input.value;
         if (type === 'integer') val = parseInt(val, 10);
         else if (type === 'number') val = parseFloat(val);
         else if (type === 'boolean') val = (val === 'true');
@@ -708,65 +683,68 @@ async def long_running_task(context: Context, items_count: Annotated[int, "Numbe
 
       btn.disabled = true;
       btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Executing...</span>';
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
 
       try {
-        const res = await fetch('/api/dashboard/tools/execute', {
+        var res = await fetch('/api/dashboard/tools/execute', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: toolName, arguments: args })
         });
-        const data = await res.json();
-        latencyEl.innerText = \`\${data.execution_time_ms || 0} ms\`;
-        outputBox.innerHTML = \`<pre class="text-violet-300 whitespace-pre-wrap">\${JSON.stringify(data, null, 2)}</pre>\`;
+        var data = await res.json();
+        latencyEl.innerText = (data.execution_time_ms || 0) + ' ms';
+        outputBox.innerHTML = '<pre class="text-violet-300 whitespace-pre-wrap">' + escapeHtml(JSON.stringify(data, null, 2)) + '</pre>';
       } catch (err) {
-        outputBox.innerHTML = \`<span class="text-rose-400">Execution Error: \${err.message}</span>\`;
+        outputBox.innerHTML = '<span class="text-rose-400">Execution Error: ' + escapeHtml(err.message) + '</span>';
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<i data-lucide="play" class="w-4 h-4"></i><span>Execute Tool</span>';
-        lucide.createIcons();
+        if (window.lucide) lucide.createIcons();
       }
     }
 
     // Fetch Secrets
     async function fetchSecrets() {
       try {
-        const res = await fetch('/api/dashboard/secrets');
+        var res = await fetch('/api/dashboard/secrets');
         if (!res.ok) return;
-        const data = await res.json();
+        var data = await res.json();
 
         // Render required secrets
-        const reqList = document.getElementById('required-secrets-list');
-        if (data.required_secrets.length === 0) {
+        var reqList = document.getElementById('required-secrets-list');
+        if (!data.required_secrets || data.required_secrets.length === 0) {
           reqList.innerHTML = '<div class="p-4 rounded-xl glass-panel border border-dark-border text-xs text-slate-400">None of your active tools require extra API keys or secrets.</div>';
         } else {
-          reqList.innerHTML = data.required_secrets.map(s => \`
-            <div class="p-4 rounded-xl glass-panel border border-dark-border flex items-center justify-between">
-              <div class="space-y-1">
-                <div class="flex items-center space-x-2">
-                  <span class="font-mono font-bold text-white text-sm">\${s.key}</span>
-                  \${s.is_configured ? '<span class="text-xs px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/50">Configured</span>' : '<span class="text-xs px-2 py-0.5 rounded bg-rose-950 text-rose-400 border border-rose-800/50">Missing in Coolify</span>'}
-                </div>
-                <p class="text-xs text-slate-400">Used by tools: <span class="text-violet-300 font-mono">\${s.used_by_tools.join(', ')}</span></p>
-              </div>
-              <div class="text-xs font-mono text-slate-400">
-                \${s.is_configured ? s.preview : '<span class="text-rose-400">Not set</span>'}
-              </div>
-            </div>
-          \`).join('');
+          reqList.innerHTML = data.required_secrets.map(function(s) {
+            var statusBadge = s.is_configured ?
+              '<span class="text-xs px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/50">Configured</span>' :
+              '<span class="text-xs px-2 py-0.5 rounded bg-rose-950 text-rose-400 border border-rose-800/50">Missing in Coolify</span>';
+            var previewText = s.is_configured ? escapeHtml(s.preview) : '<span class="text-rose-400">Not set</span>';
+
+            return '<div class="p-4 rounded-xl glass-panel border border-dark-border flex items-center justify-between">' +
+              '<div class="space-y-1">' +
+                '<div class="flex items-center space-x-2">' +
+                  '<span class="font-mono font-bold text-white text-sm">' + escapeHtml(s.key) + '</span>' +
+                  statusBadge +
+                '</div>' +
+                '<p class="text-xs text-slate-400">Used by tools: <span class="text-violet-300 font-mono">' + escapeHtml(s.used_by_tools.join(', ')) + '</span></p>' +
+              '</div>' +
+              '<div class="text-xs font-mono text-slate-400">' + previewText + '</div>' +
+            '</div>';
+          }).join('');
         }
 
         // Render other secrets
-        const otherList = document.getElementById('other-secrets-list');
-        if (data.other_configured_secrets.length === 0) {
+        var otherList = document.getElementById('other-secrets-list');
+        if (!data.other_configured_secrets || data.other_configured_secrets.length === 0) {
           otherList.innerHTML = '<div class="text-xs text-slate-500 col-span-full">No other custom environment variables detected.</div>';
         } else {
-          otherList.innerHTML = data.other_configured_secrets.map(s => \`
-            <div class="bg-dark-bg p-3 rounded-xl border border-dark-border text-xs space-y-1">
-              <span class="font-mono font-bold text-slate-300 truncate block">\${s.key}</span>
-              <span class="text-[11px] font-mono text-slate-500 block">\${s.preview}</span>
-            </div>
-          \`).join('');
+          otherList.innerHTML = data.other_configured_secrets.map(function(s) {
+            return '<div class="bg-dark-bg p-3 rounded-xl border border-dark-border text-xs space-y-1">' +
+              '<span class="font-mono font-bold text-slate-300 truncate block">' + escapeHtml(s.key) + '</span>' +
+              '<span class="text-[11px] font-mono text-slate-500 block">' + escapeHtml(s.preview) + '</span>' +
+            '</div>';
+          }).join('');
         }
       } catch (err) {
         console.error('Failed to fetch secrets:', err);
@@ -779,10 +757,10 @@ async def long_running_task(context: Context, items_count: Annotated[int, "Numbe
     }
 
     async function saveToolFile() {
-      const filename = document.getElementById('create-tool-filename').value.trim();
-      const code = document.getElementById('create-tool-code').value;
-      const statusEl = document.getElementById('create-tool-status');
-      const btn = document.getElementById('save-tool-btn');
+      var filename = document.getElementById('create-tool-filename').value.trim();
+      var code = document.getElementById('create-tool-code').value;
+      var statusEl = document.getElementById('create-tool-status');
+      var btn = document.getElementById('save-tool-btn');
 
       if (!filename || !code) {
         statusEl.innerHTML = '<span class="text-rose-400">Please provide filename and code.</span>';
@@ -793,20 +771,20 @@ async def long_running_task(context: Context, items_count: Annotated[int, "Numbe
       statusEl.innerHTML = '<span class="text-slate-400">Saving tool file...</span>';
 
       try {
-        const res = await fetch('/api/dashboard/tools/create', {
+        var res = await fetch('/api/dashboard/tools/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ filename, code })
+          body: JSON.stringify({ filename: filename, code: code })
         });
-        const data = await res.json();
+        var data = await res.json();
         if (res.ok) {
-          statusEl.innerHTML = \`<span class="text-emerald-400">\${data.message}</span>\`;
+          statusEl.innerHTML = '<span class="text-emerald-400">' + escapeHtml(data.message) + '</span>';
           await fetchTools();
         } else {
-          statusEl.innerHTML = \`<span class="text-rose-400">Error: \${data.detail || 'Failed to save'}</span>\`;
+          statusEl.innerHTML = '<span class="text-rose-400">Error: ' + escapeHtml(data.detail || 'Failed to save') + '</span>';
         }
       } catch (err) {
-        statusEl.innerHTML = \`<span class="text-rose-400">Network Error: \${err.message}</span>\`;
+        statusEl.innerHTML = '<span class="text-rose-400">Network Error: ' + escapeHtml(err.message) + '</span>';
       } finally {
         btn.disabled = false;
       }
@@ -815,9 +793,9 @@ async def long_running_task(context: Context, items_count: Annotated[int, "Numbe
     // Fetch Client Snippets
     async function fetchSnippets() {
       try {
-        const res = await fetch('/api/dashboard/config-snippets');
+        var res = await fetch('/api/dashboard/config-snippets');
         if (!res.ok) return;
-        const data = await res.json();
+        var data = await res.json();
         document.getElementById('cursor-snippet').innerText = JSON.stringify(data.cursor, null, 2);
         document.getElementById('claude-snippet').innerText = JSON.stringify(data.claude_desktop, null, 2);
         document.getElementById('librechat-snippet').innerText = data.librechat;
@@ -827,17 +805,45 @@ async def long_running_task(context: Context, items_count: Annotated[int, "Numbe
     }
 
     function copySnippet(id) {
-      const text = document.getElementById(id).innerText;
-      copyToClipboard(text);
+      var el = document.getElementById(id);
+      if (el) copyToClipboard(el.innerText);
     }
 
     function copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+          alert('Copied to clipboard!');
+        }).catch(function(err) {
+          console.error('Copy failed:', err);
+        });
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
         alert('Copied to clipboard!');
-      }).catch(err => {
-        console.error('Copy failed:', err);
-      });
+      }
     }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', async function() {
+      if (window.lucide) lucide.createIcons();
+      loadToolTemplate('basic');
+      await Promise.all([fetchOverview(), fetchTools(), fetchSecrets(), fetchSnippets()]);
+      setInterval(fetchOverview, 10000);
+    });
   </script>
 </body>
 </html>
