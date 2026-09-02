@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "gateways": [
+    {
+      "slug": "default",
+      "name": "Default Gateway",
+      "description": "Default gateway hosting all local tools and custom upstream MCPs",
+      "enabled": true,
+      "included_local_tools": [
+        "*"
+      ],
+      "upstream_servers": [],
+      "created_at": 1788309490.0275478,
+      "updated_at": 1788309490.0275478
+    },
+    {
+      "slug": "dev-alpha",
+      "name": "Dev Alpha Project",
+      "description": "Gateway for Alpha application development",
+      "enabled": true,
+      "included_local_tools": [
+        "Ping",
+        "Echo"
+      ],
+      "upstream_servers": [],
+      "created_at": 1788309496.35422,
+      "updated_at": 1788309496.354222
+    }
+  ]
+}

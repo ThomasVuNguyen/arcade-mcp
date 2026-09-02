@@ -19,6 +19,8 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from arcade_mcp_server.context import Context
+from arcade_mcp_server.gateway.manager import GatewayConfig, GatewayManager, UpstreamMCPServer
+from arcade_mcp_server.gateway.upstream_client import test_upstream_mcp_connection
 from arcade_mcp_server.server import MCPServer
 from arcade_mcp_server.settings import MCPSettings
 
@@ -36,6 +38,12 @@ class ToolExecuteRequest(BaseModel):
 class ToolCreateRequest(BaseModel):
     filename: str = Field(..., description="Filename in tools/ (e.g. custom_tools.py)")
     code: str = Field(..., description="Python source code containing @tool definitions")
+
+
+class TestUpstreamRequest(BaseModel):
+    url: str = Field(..., description="Streamable HTTP or SSE URL of the upstream MCP server")
+    transport: str = Field(default="streamable-http", description="Transport type")
+    headers: dict[str, str] = Field(default_factory=dict, description="Custom headers with optional ${ENV_VAR} variables")
 
 
 def _get_static_html_path() -> Path:
@@ -65,9 +73,13 @@ def create_dashboard_router(
     catalog: ToolCatalog,
     mcp_settings: MCPSettings,
     get_mcp_server: Callable[[], MCPServer | None],
+    gateway_manager: GatewayManager | None = None,
 ) -> APIRouter:
     """Create FastAPI router providing the dashboard UI and admin APIs."""
     router = APIRouter(tags=["Arcade Dashboard"])
+
+    # Fallback to local GatewayManager instance if not provided
+    gw_manager = gateway_manager or GatewayManager()
 
     @router.get("/", response_class=HTMLResponse, include_in_schema=False)
     @router.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
@@ -113,6 +125,8 @@ def create_dashboard_router(
         proto = request.headers.get("x-forwarded-proto", request.url.scheme)
         base_url = f"{proto}://{host_header}"
 
+        gateways = gw_manager.list_gateways()
+
         return {
             "server": {
                 "name": mcp_settings.server.name,
@@ -126,6 +140,7 @@ def create_dashboard_router(
             "counts": {
                 "tools": tools_count,
                 "resources": resources_count,
+                "gateways": len(gateways),
                 "configured_secrets": len(all_env_keys),
                 "required_secrets": len(required_secrets_set),
                 "missing_secrets": len(missing_secrets),
@@ -281,7 +296,6 @@ def create_dashboard_router(
     @router.get("/api/dashboard/secrets")
     async def get_secrets_status() -> dict[str, Any]:
         """List secrets status: required secrets across tools and all active tool secrets."""
-        # Find all required secrets
         tool_secret_map: dict[str, list[str]] = {}
         for t in catalog:
             tool_def = _extract_tool_def(t)
@@ -350,16 +364,108 @@ def create_dashboard_router(
         except Exception as exc:
             raise HTTPException(status_code=500, detail=f"Failed to write file: {exc}") from exc
 
+    # ==========================================
+    # MULTI-GATEWAY MANAGEMENT APIS
+    # ==========================================
+
+    @router.get("/api/gateways")
+    async def list_gateways(request: Request) -> list[dict[str, Any]]:
+        """List all configured gateways with their tools count and endpoint URLs."""
+        host_header = request.headers.get("host", "arcade.beenex.org")
+        proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+        base_url = f"{proto}://{host_header}"
+
+        gateways = gw_manager.list_gateways()
+        res = []
+        for gw in gateways:
+            tools = await gw_manager.get_aggregated_tools(gw, catalog)
+            endpoint = f"{base_url}/gateways/{gw.slug}/mcp"
+            res.append({
+                "slug": gw.slug,
+                "name": gw.name,
+                "description": gw.description,
+                "enabled": gw.enabled,
+                "endpoint_url": endpoint,
+                "tools_count": len(tools),
+                "upstream_count": len(gw.upstream_servers),
+                "included_local_tools": gw.included_local_tools,
+                "upstream_servers": [s.model_dump() for s in gw.upstream_servers],
+                "created_at": gw.created_at,
+                "updated_at": gw.updated_at,
+            })
+        return res
+
+    @router.post("/api/gateways")
+    async def create_gateway(payload: GatewayConfig) -> dict[str, Any]:
+        """Create a new MCP Gateway."""
+        try:
+            created = gw_manager.create_gateway(payload)
+            return {"success": True, "gateway": created.model_dump()}
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @router.get("/api/gateways/{slug}")
+    async def get_gateway_detail(slug: str, request: Request) -> dict[str, Any]:
+        """Get gateway details and aggregated tools list."""
+        gw = gw_manager.get_gateway(slug)
+        if gw is None:
+            raise HTTPException(status_code=404, detail=f"Gateway '{slug}' not found.")
+
+        host_header = request.headers.get("host", "arcade.beenex.org")
+        proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+        endpoint = f"{proto}://{host_header}/gateways/{gw.slug}/mcp"
+
+        tools = await gw_manager.get_aggregated_tools(gw, catalog)
+        return {
+            "gateway": gw.model_dump(),
+            "endpoint_url": endpoint,
+            "tools": tools,
+            "tools_count": len(tools),
+        }
+
+    @router.put("/api/gateways/{slug}")
+    async def update_gateway(slug: str, payload: GatewayConfig) -> dict[str, Any]:
+        """Update an existing MCP Gateway."""
+        try:
+            updated = gw_manager.update_gateway(slug, payload)
+            return {"success": True, "gateway": updated.model_dump()}
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @router.delete("/api/gateways/{slug}")
+    async def delete_gateway(slug: str) -> dict[str, Any]:
+        """Delete an MCP Gateway."""
+        if slug == "default":
+            raise HTTPException(status_code=400, detail="Cannot delete the default gateway.")
+        deleted = gw_manager.delete_gateway(slug)
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Gateway '{slug}' not found.")
+        return {"success": True, "message": f"Gateway '{slug}' deleted successfully."}
+
+    @router.post("/api/gateways/test-upstream")
+    async def test_upstream(payload: TestUpstreamRequest) -> dict[str, Any]:
+        """Test connectivity and inspect tools of an upstream MCP server."""
+        return await test_upstream_mcp_connection(
+            url=payload.url,
+            headers=payload.headers,
+        )
+
     @router.get("/api/dashboard/config-snippets")
-    async def get_config_snippets(request: Request) -> dict[str, Any]:
+    async def get_config_snippets(request: Request, gateway: str | None = None) -> dict[str, Any]:
         """Generate client configuration snippets for Claude, Cursor, LibreChat, and SDKs."""
         host_header = request.headers.get("host", "arcade.beenex.org")
         proto = request.headers.get("x-forwarded-proto", request.url.scheme)
-        mcp_url = f"{proto}://{host_header}/mcp/"
+        
+        if gateway and gateway != "global":
+            mcp_url = f"{proto}://{host_header}/gateways/{gateway}/mcp"
+            server_key = f"arcade-{gateway}"
+        else:
+            mcp_url = f"{proto}://{host_header}/mcp/"
+            server_key = "arcade"
 
         claude_config = {
             "mcpServers": {
-                "arcade": {
+                server_key: {
                     "url": mcp_url,
                     "transport": "streamable-http",
                 }
@@ -368,14 +474,14 @@ def create_dashboard_router(
 
         cursor_config = {
             "mcpServers": {
-                "arcade": {
+                server_key: {
                     "url": mcp_url,
                 }
             }
         }
 
         librechat_config = f"""mcpServers:
-  arcade:
+  {server_key}:
     type: "streamable-http"
     url: "{mcp_url}"
 """

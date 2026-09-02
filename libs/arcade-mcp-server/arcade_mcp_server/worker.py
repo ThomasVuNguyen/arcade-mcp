@@ -29,6 +29,8 @@ from starlette.types import Receive, Scope, Send
 from arcade_mcp_server.fastapi.auth_routes import create_auth_router
 from arcade_mcp_server.fastapi.dashboard_routes import create_dashboard_router
 from arcade_mcp_server.fastapi.middleware import AddTrailingSlashToPathMiddleware
+from arcade_mcp_server.gateway.manager import GatewayManager
+from arcade_mcp_server.gateway.router import create_gateway_router
 from arcade_mcp_server.logging_utils import setup_logging
 from arcade_mcp_server.resource_server.base import ResourceServerValidator
 from arcade_mcp_server.resource_server.middleware import ResourceServerMiddleware
@@ -234,13 +236,25 @@ def create_arcade_mcp(
         auth_router = create_auth_router(resource_server_validator, canonical_url)
         app.include_router(auth_router)
 
+    # Multi-Gateway Manager & Aggregator
+    gateway_manager = GatewayManager()
+
     # Dashboard and Tool Playground UI
     dashboard_router = create_dashboard_router(
         catalog=catalog,
         mcp_settings=mcp_settings,
         get_mcp_server=lambda: getattr(app.state, "mcp_server", None),
+        gateway_manager=gateway_manager,
     )
     app.include_router(dashboard_router)
+
+    # Gateway MCP Protocol Router
+    gateway_router = create_gateway_router(
+        gateway_manager=gateway_manager,
+        local_catalog=catalog,
+        get_mcp_server=lambda: getattr(app.state, "mcp_server", None),
+    )
+    app.include_router(gateway_router)
 
     # Worker endpoints
     if secret is not None:

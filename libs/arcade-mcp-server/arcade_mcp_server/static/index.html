@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Arcade MCP Server — Dashboard</title>
+  <title>Arcade MCP Server & Gateway Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -69,11 +69,11 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-violet-600/30">
-          <i data-lucide="cpu" class="w-5 h-5 text-white"></i>
+          <i data-lucide="network" class="w-5 h-5 text-white"></i>
         </div>
         <div>
           <div class="flex items-center space-x-2">
-            <span class="font-bold text-lg tracking-tight text-white">Arcade MCP</span>
+            <span class="font-bold text-lg tracking-tight text-white">Arcade Gateway</span>
             <span class="text-xs px-2 py-0.5 rounded-full bg-violet-950/80 text-violet-400 border border-violet-800/60 font-mono font-semibold" id="version-badge">v1.15.2</span>
           </div>
         </div>
@@ -101,6 +101,11 @@
         <button onclick="switchTab('overview')" id="tab-overview" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl font-semibold text-sm transition text-white bg-violet-600 shadow-md shadow-violet-600/20">
           <i data-lucide="layout-grid" class="w-4 h-4"></i>
           <span>Overview</span>
+        </button>
+        <button onclick="switchTab('gateways')" id="tab-gateways" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl font-semibold text-sm transition text-slate-400 hover:text-white hover:bg-dark-card">
+          <i data-lucide="git-merge" class="w-4 h-4"></i>
+          <span class="flex-1 text-left">Gateways</span>
+          <span id="nav-gateways-count" class="text-xs bg-violet-950 text-violet-400 border border-violet-800/50 px-2 py-0.5 rounded-full font-mono">1</span>
         </button>
         <button onclick="switchTab('tools')" id="tab-tools" class="w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl font-semibold text-sm transition text-slate-400 hover:text-white hover:bg-dark-card">
           <i data-lucide="wrench" class="w-4 h-4"></i>
@@ -156,18 +161,29 @@
       <section id="panel-overview" class="space-y-6">
         <!-- Hero / Stats -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="p-5 rounded-2xl glass-panel border border-dark-border">
+          <div class="p-5 rounded-2xl glass-panel border border-dark-border cursor-pointer hover:border-violet-500/40 transition" onclick="switchTab('gateways')">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Gateways</span>
+              <div class="w-8 h-8 rounded-lg bg-violet-950/60 text-violet-400 flex items-center justify-center">
+                <i data-lucide="git-merge" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div class="mt-3 text-3xl font-bold text-white font-mono" id="stat-gateways">1</div>
+            <div class="mt-1 text-xs text-slate-400">Multi-tenant hubs</div>
+          </div>
+
+          <div class="p-5 rounded-2xl glass-panel border border-dark-border cursor-pointer hover:border-violet-500/40 transition" onclick="switchTab('tools')">
             <div class="flex items-center justify-between">
               <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Active Tools</span>
-              <div class="w-8 h-8 rounded-lg bg-violet-950/60 text-violet-400 flex items-center justify-center">
+              <div class="w-8 h-8 rounded-lg bg-indigo-950/60 text-indigo-400 flex items-center justify-center">
                 <i data-lucide="wrench" class="w-4 h-4"></i>
               </div>
             </div>
             <div class="mt-3 text-3xl font-bold text-white font-mono" id="stat-tools">0</div>
-            <div class="mt-1 text-xs text-slate-400">Loaded in catalog</div>
+            <div class="mt-1 text-xs text-slate-400">Local tools catalog</div>
           </div>
 
-          <div class="p-5 rounded-2xl glass-panel border border-dark-border">
+          <div class="p-5 rounded-2xl glass-panel border border-dark-border cursor-pointer hover:border-violet-500/40 transition" onclick="switchTab('secrets')">
             <div class="flex items-center justify-between">
               <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Configured Secrets</span>
               <div class="w-8 h-8 rounded-lg bg-emerald-950/60 text-emerald-400 flex items-center justify-center">
@@ -181,23 +197,12 @@
           <div class="p-5 rounded-2xl glass-panel border border-dark-border">
             <div class="flex items-center justify-between">
               <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Protocol</span>
-              <div class="w-8 h-8 rounded-lg bg-indigo-950/60 text-indigo-400 flex items-center justify-center">
+              <div class="w-8 h-8 rounded-lg bg-blue-950/60 text-blue-400 flex items-center justify-center">
                 <i data-lucide="radio" class="w-4 h-4"></i>
               </div>
             </div>
             <div class="mt-3 text-xl font-bold text-white font-mono">Streamable HTTP</div>
             <div class="mt-1 text-xs text-slate-400">SSE + JSON-RPC 2.0</div>
-          </div>
-
-          <div class="p-5 rounded-2xl glass-panel border border-dark-border">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">MCP Endpoint</span>
-              <div class="w-8 h-8 rounded-lg bg-blue-950/60 text-blue-400 flex items-center justify-center">
-                <i data-lucide="link" class="w-4 h-4"></i>
-              </div>
-            </div>
-            <div class="mt-3 text-sm font-bold text-white font-mono truncate" id="stat-mcp-url">/mcp/</div>
-            <div class="mt-1 text-xs text-slate-400">Ready for clients</div>
           </div>
         </div>
 
@@ -209,7 +214,7 @@
                 <i data-lucide="zap" class="w-5 h-5 text-amber-400"></i>
                 <span>Connect Your AI Clients</span>
               </h3>
-              <p class="text-sm text-slate-400">Use this streamable HTTP URL to connect Cursor, Claude Desktop, LibreChat, or custom agents.</p>
+              <p class="text-sm text-slate-400">Connect Cursor, Claude Desktop, or LibreChat to your default gateway or create a specialized gateway for each project.</p>
             </div>
             <button onclick="copyToClipboard(document.getElementById('mcp-endpoint-input').value)" class="px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs transition flex items-center space-x-2 shadow-lg shadow-violet-600/20">
               <i data-lucide="copy" class="w-3.5 h-3.5"></i>
@@ -217,31 +222,50 @@
             </button>
           </div>
           <div class="relative">
-            <input type="text" id="mcp-endpoint-input" readonly value="http://arcade.beenex.org/mcp/" class="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-3 font-mono text-sm text-violet-300 select-all focus:outline-none focus:border-violet-500" />
+            <input type="text" id="mcp-endpoint-input" readonly value="http://arcade.beenex.org/gateways/default/mcp" class="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-3 font-mono text-sm text-violet-300 select-all focus:outline-none focus:border-violet-500" />
           </div>
         </div>
 
-        <!-- Quick Tools Preview -->
+        <!-- Quick Gateways Preview -->
         <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <h3 class="font-bold text-white text-base">Registered Tools</h3>
-            <button onclick="switchTab('tools')" class="text-xs text-violet-400 hover:text-violet-300 font-semibold flex items-center space-x-1">
-              <span>View all</span>
+            <h3 class="font-bold text-white text-base">Your Gateways</h3>
+            <button onclick="switchTab('gateways')" class="text-xs text-violet-400 hover:text-violet-300 font-semibold flex items-center space-x-1">
+              <span>Manage Gateways</span>
               <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
             </button>
           </div>
-          <div id="overview-tools-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div id="overview-gateways-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Populated dynamically -->
           </div>
         </div>
       </section>
 
-      <!-- 2. TOOLS CATALOG PANEL -->
+      <!-- 2. GATEWAYS PANEL (MULTI-TENANT & UPSTREAM AGGREGATOR) -->
+      <section id="panel-gateways" class="hidden space-y-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-white">Project Gateways & Aggregators</h2>
+            <p class="text-sm text-slate-400">Create dedicated MCP endpoints per project that combine local tools and external upstream MCP servers.</p>
+          </div>
+          <button onclick="openCreateGatewayModal()" class="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs transition flex items-center space-x-2 shadow-lg shadow-violet-600/25">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Create Gateway</span>
+          </button>
+        </div>
+
+        <!-- Gateway Cards List -->
+        <div id="gateways-list" class="space-y-4">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+
+      <!-- 3. TOOLS CATALOG PANEL -->
       <section id="panel-tools" class="hidden space-y-6">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h2 class="text-xl font-bold text-white">Tool Catalog</h2>
-            <p class="text-sm text-slate-400">Explore all tools registered in the Arcade MCP server.</p>
+            <p class="text-sm text-slate-400">Explore all local tools registered in the Arcade server.</p>
           </div>
           <div class="relative w-full sm:w-72">
             <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3 text-slate-500"></i>
@@ -254,11 +278,19 @@
         </div>
       </section>
 
-      <!-- 3. PLAYGROUND PANEL -->
+      <!-- 4. PLAYGROUND PANEL -->
       <section id="panel-playground" class="hidden space-y-6">
-        <div>
-          <h2 class="text-xl font-bold text-white">Tool Playground</h2>
-          <p class="text-sm text-slate-400">Test and execute your MCP tools interactively with custom arguments.</p>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-white">Tool Playground</h2>
+            <p class="text-sm text-slate-400">Test and execute tools interactively across local catalog or specific gateways.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <label class="text-xs text-slate-400 font-semibold">Scope:</label>
+            <select id="playground-gateway-select" onchange="onPlaygroundGatewayChange()" class="bg-dark-card border border-dark-border rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-violet-500">
+              <option value="local">Local Tools Catalog</option>
+            </select>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -302,7 +334,7 @@
         </div>
       </section>
 
-      <!-- 4. CREDENTIALS & SECRETS PANEL -->
+      <!-- 5. CREDENTIALS & SECRETS PANEL -->
       <section id="panel-secrets" class="hidden space-y-6">
         <div>
           <h2 class="text-xl font-bold text-white">Credentials & Secrets</h2>
@@ -313,7 +345,7 @@
           <i data-lucide="info" class="w-5 h-5 text-violet-400 shrink-0 mt-0.5"></i>
           <div>
             <span class="font-semibold text-white">How to configure secrets in Coolify:</span>
-            <p class="text-xs text-violet-200/80 mt-1">Open your Coolify dashboard, navigate to <strong>Starship &gt; arcade-mcp &gt; Environment Variables</strong>, add your API key or token, and click <strong>Save & Redeploy</strong>. The server auto-injects all non-MCP environment variables to tools via <code class="bg-violet-950 px-1 py-0.5 rounded font-mono">context.get_secret("NAME")</code>.</p>
+            <p class="text-xs text-violet-200/80 mt-1">Open your Coolify dashboard, navigate to <strong>Starship &gt; arcade-mcp &gt; Environment Variables</strong>, add your API key or token, and click <strong>Save & Redeploy</strong>. All environment variables can also be used in Upstream MCP headers via <code class="bg-violet-950 px-1 py-0.5 rounded font-mono">${VAR_NAME}</code> syntax.</p>
           </div>
         </div>
 
@@ -332,7 +364,7 @@
         </div>
       </section>
 
-      <!-- 5. CREATE TOOL PANEL -->
+      <!-- 6. CREATE TOOL PANEL -->
       <section id="panel-create-tool" class="hidden space-y-6">
         <div>
           <h2 class="text-xl font-bold text-white">Create New Tool</h2>
@@ -370,11 +402,19 @@
         </div>
       </section>
 
-      <!-- 6. CLIENT CONFIGS PANEL -->
+      <!-- 7. CLIENT CONFIGS PANEL -->
       <section id="panel-clients" class="hidden space-y-6">
-        <div>
-          <h2 class="text-xl font-bold text-white">Client Configurations</h2>
-          <p class="text-sm text-slate-400">Copy ready-to-use MCP configuration snippets for your favorite AI clients and agent frameworks.</p>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-bold text-white">Client Configurations</h2>
+            <p class="text-sm text-slate-400">Copy ready-to-use MCP configuration snippets for your favorite AI clients and agent frameworks.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <label class="text-xs text-slate-400 font-semibold">Gateway:</label>
+            <select id="config-gateway-select" onchange="fetchSnippets()" class="bg-dark-card border border-dark-border rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-violet-500">
+              <option value="default">Default Gateway</option>
+            </select>
+          </div>
         </div>
 
         <div class="space-y-6">
@@ -437,11 +477,69 @@
     </main>
   </div>
 
+  <!-- CREATE / EDIT GATEWAY MODAL -->
+  <div id="gateway-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-dark-card border border-dark-border rounded-2xl max-w-2xl w-full p-6 space-y-6 shadow-2xl custom-scrollbar max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white flex items-center space-x-2" id="gateway-modal-title">
+          <i data-lucide="git-merge" class="w-5 h-5 text-violet-400"></i>
+          <span>Create New Gateway</span>
+        </h3>
+        <button onclick="closeGatewayModal()" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Gateway Name</label>
+            <input type="text" id="modal-gw-name" oninput="autoSlugGateway()" placeholder="e.g. Backend Dev Stack" class="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">URL Slug (Endpoint identifier)</label>
+            <input type="text" id="modal-gw-slug" placeholder="e.g. backend-dev" class="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-violet-500" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Description</label>
+          <input type="text" id="modal-gw-desc" placeholder="Tools for backend development and automation" class="w-full bg-dark-bg border border-dark-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500" />
+        </div>
+
+        <!-- Upstream MCP Servers Section -->
+        <div class="space-y-3 pt-3 border-t border-dark-border">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Upstream External MCP Servers</span>
+            <button type="button" onclick="addUpstreamRow()" class="text-xs text-violet-400 hover:text-violet-300 font-semibold flex items-center space-x-1">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Add External MCP Server</span>
+            </button>
+          </div>
+          <div id="modal-upstream-container" class="space-y-3">
+            <!-- Upstream rows -->
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end space-x-3 pt-4 border-t border-dark-border">
+        <button onclick="closeGatewayModal()" class="px-4 py-2 rounded-xl bg-dark-hover hover:bg-dark-border text-slate-300 text-xs font-semibold transition">Cancel</button>
+        <button onclick="saveGateway()" id="modal-save-gw-btn" class="px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs transition flex items-center space-x-2 shadow-lg shadow-violet-600/20">
+          <i data-lucide="check" class="w-4 h-4"></i>
+          <span>Save Gateway</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // State
     var cachedTools = [];
+    var cachedGateways = [];
     var cachedOverview = {};
     var activeTab = 'overview';
+    var activePlaygroundGateway = 'local';
+    var editingGatewaySlug = null;
 
     var templates = {
       basic: "from typing import Annotated\nfrom arcade_tdk import tool\n\n@tool\ndef calculate_sum(a: Annotated[int, \"First number\"], b: Annotated[int, \"Second number\"]) -> int:\n    \"\"\"Calculate the sum of two integers.\"\"\"\n    return a + b\n",
@@ -452,7 +550,7 @@
     // Switch Tab
     function switchTab(tab) {
       activeTab = tab;
-      var panels = ['overview', 'tools', 'playground', 'secrets', 'create-tool', 'clients'];
+      var panels = ['overview', 'gateways', 'tools', 'playground', 'secrets', 'create-tool', 'clients'];
       panels.forEach(function(p) {
         var panelEl = document.getElementById('panel-' + p);
         var tabEl = document.getElementById('tab-' + p);
@@ -485,9 +583,9 @@
         document.getElementById('server-uptime').innerText = data.uptime_formatted;
         document.getElementById('stat-tools').innerText = data.counts.tools;
         document.getElementById('nav-tools-count').innerText = data.counts.tools;
+        document.getElementById('stat-gateways').innerText = data.counts.gateways || 1;
+        document.getElementById('nav-gateways-count').innerText = data.counts.gateways || 1;
         document.getElementById('stat-secrets').innerText = data.counts.configured_secrets;
-        document.getElementById('mcp-endpoint-input').value = data.endpoints.mcp;
-        document.getElementById('stat-mcp-url').innerText = data.endpoints.mcp;
 
         var badge = document.getElementById('nav-secrets-badge');
         if (data.counts.missing_secrets > 0) {
@@ -501,40 +599,285 @@
       }
     }
 
+    // Fetch Gateways
+    async function fetchGateways() {
+      try {
+        var res = await fetch('/api/gateways');
+        if (!res.ok) return;
+        cachedGateways = await res.json();
+        renderGateways(cachedGateways);
+        renderOverviewGateways(cachedGateways);
+        populateGatewaySelects(cachedGateways);
+      } catch (err) {
+        console.error('Failed to fetch gateways:', err);
+      }
+    }
+
+    function renderOverviewGateways(gateways) {
+      var grid = document.getElementById('overview-gateways-grid');
+      if (!grid) return;
+      grid.innerHTML = gateways.map(function(gw) {
+        return '<div class="p-4 rounded-xl glass-panel border border-dark-border space-y-2 hover:border-violet-500/50 transition">' +
+          '<div class="flex items-center justify-between">' +
+            '<span class="font-bold text-white text-sm">' + escapeHtml(gw.name) + '</span>' +
+            '<span class="text-[11px] px-2 py-0.5 rounded bg-violet-950/60 text-violet-400 border border-violet-800/40 font-mono">/' + escapeHtml(gw.slug) + '</span>' +
+          '</div>' +
+          '<p class="text-xs text-slate-400 line-clamp-1">' + escapeHtml(gw.description || 'No description') + '</p>' +
+          '<div class="pt-2 flex items-center justify-between text-xs">' +
+            '<span class="text-slate-500 font-mono text-[11px]">' + gw.tools_count + ' tools • ' + gw.upstream_count + ' upstream</span>' +
+            '<button onclick="copyToClipboard(\'' + escapeHtml(gw.endpoint_url) + '\')" class="text-xs text-violet-400 hover:text-violet-300 font-semibold flex items-center space-x-1">' +
+              '<span>Copy URL</span>' +
+              '<i data-lucide="copy" class="w-3 h-3"></i>' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderGateways(gateways) {
+      var list = document.getElementById('gateways-list');
+      if (!list) return;
+      if (gateways.length === 0) {
+        list.innerHTML = '<div class="p-8 text-center text-slate-500 text-sm">No gateways configured. Click "Create Gateway" above.</div>';
+        return;
+      }
+      list.innerHTML = gateways.map(function(gw) {
+        var upstreamsHtml = '';
+        if (gw.upstream_servers && gw.upstream_servers.length > 0) {
+          upstreamsHtml = '<div class="pt-3 border-t border-dark-border/60">' +
+            '<span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">Connected Upstream MCP Servers</span>' +
+            '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">' +
+              gw.upstream_servers.map(function(u) {
+                return '<div class="bg-dark-bg p-3 rounded-xl border border-dark-border text-xs space-y-1">' +
+                  '<div class="flex items-center justify-between">' +
+                    '<span class="font-bold text-white">' + escapeHtml(u.name) + '</span>' +
+                    '<span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/40">Active</span>' +
+                  '</div>' +
+                  '<p class="text-[11px] font-mono text-slate-400 truncate">' + escapeHtml(u.url) + '</p>' +
+                  (u.prefix ? '<span class="text-[10px] text-violet-400 font-mono">Prefix: ' + escapeHtml(u.prefix) + '_*</span>' : '') +
+                '</div>';
+              }).join('') +
+            '</div>' +
+          '</div>';
+        }
+
+        return '<div class="p-6 rounded-2xl glass-panel border border-dark-border space-y-4 hover:border-violet-500/40 transition">' +
+          '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">' +
+            '<div class="space-y-1">' +
+              '<div class="flex items-center space-x-2">' +
+                '<span class="text-base font-bold text-white">' + escapeHtml(gw.name) + '</span>' +
+                '<span class="text-xs px-2 py-0.5 rounded bg-violet-950 text-violet-400 border border-violet-800/50 font-mono">/gateways/' + escapeHtml(gw.slug) + '/mcp</span>' +
+              '</div>' +
+              '<p class="text-xs text-slate-400">' + escapeHtml(gw.description || 'Custom project gateway') + '</p>' +
+            '</div>' +
+            '<div class="flex items-center space-x-2 shrink-0">' +
+              '<button onclick="copyToClipboard(\'' + escapeHtml(gw.endpoint_url) + '\')" class="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs transition flex items-center space-x-1.5 shadow-md shadow-violet-600/20">' +
+                '<i data-lucide="copy" class="w-3.5 h-3.5"></i>' +
+                '<span>Copy MCP URL</span>' +
+              '</button>' +
+              '<button onclick="openEditGatewayModal(\'' + escapeHtml(gw.slug) + '\')" class="p-2 rounded-xl bg-dark-hover hover:bg-dark-border text-slate-300 hover:text-white transition">' +
+                '<i data-lucide="edit-3" class="w-3.5 h-3.5"></i>' +
+              '</button>' +
+              (gw.slug !== 'default' ? '<button onclick="deleteGateway(\'' + escapeHtml(gw.slug) + '\')" class="p-2 rounded-xl bg-dark-hover hover:bg-rose-950/60 text-slate-400 hover:text-rose-400 transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div class="bg-dark-bg p-3 rounded-xl border border-dark-border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">' +
+            '<div class="font-mono text-violet-300 truncate select-all">' + escapeHtml(gw.endpoint_url) + '</div>' +
+            '<div class="text-slate-400 shrink-0">' + gw.tools_count + ' Aggregated Tool(s)</div>' +
+          '</div>' +
+          upstreamsHtml +
+        '</div>';
+      }).join('');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function populateGatewaySelects(gateways) {
+      var pgSelect = document.getElementById('playground-gateway-select');
+      var cfgSelect = document.getElementById('config-gateway-select');
+      if (pgSelect) {
+        pgSelect.innerHTML = '<option value="local">Local Tools Catalog</option>' +
+          gateways.map(function(gw) {
+            return '<option value="' + escapeHtml(gw.slug) + '">Gateway: ' + escapeHtml(gw.name) + ' (' + gw.tools_count + ' tools)</option>';
+          }).join('');
+      }
+      if (cfgSelect) {
+        cfgSelect.innerHTML = gateways.map(function(gw) {
+          return '<option value="' + escapeHtml(gw.slug) + '">' + escapeHtml(gw.name) + ' (/gateways/' + escapeHtml(gw.slug) + '/mcp)</option>';
+        }).join('');
+      }
+    }
+
+    // Gateway Modal Handling
+    function openCreateGatewayModal() {
+      editingGatewaySlug = null;
+      document.getElementById('gateway-modal-title').innerHTML = '<i data-lucide="git-merge" class="w-5 h-5 text-violet-400"></i><span>Create New Gateway</span>';
+      document.getElementById('modal-gw-name').value = '';
+      document.getElementById('modal-gw-slug').value = '';
+      document.getElementById('modal-gw-slug').disabled = false;
+      document.getElementById('modal-gw-desc').value = '';
+      document.getElementById('modal-upstream-container').innerHTML = '';
+      document.getElementById('gateway-modal').classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function openEditGatewayModal(slug) {
+      var gw = cachedGateways.find(function(g) { return g.slug === slug; });
+      if (!gw) return;
+      editingGatewaySlug = slug;
+      document.getElementById('gateway-modal-title').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-violet-400"></i><span>Edit Gateway: ' + escapeHtml(gw.name) + '</span>';
+      document.getElementById('modal-gw-name').value = gw.name;
+      document.getElementById('modal-gw-slug').value = gw.slug;
+      document.getElementById('modal-gw-slug').disabled = (gw.slug === 'default');
+      document.getElementById('modal-gw-desc').value = gw.description || '';
+      
+      var container = document.getElementById('modal-upstream-container');
+      container.innerHTML = '';
+      if (gw.upstream_servers) {
+        gw.upstream_servers.forEach(function(u) {
+          addUpstreamRow(u);
+        });
+      }
+
+      document.getElementById('gateway-modal').classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeGatewayModal() {
+      document.getElementById('gateway-modal').classList.add('hidden');
+    }
+
+    function autoSlugGateway() {
+      if (editingGatewaySlug) return;
+      var name = document.getElementById('modal-gw-name').value;
+      var slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      document.getElementById('modal-gw-slug').value = slug;
+    }
+
+    function addUpstreamRow(data) {
+      data = data || { name: '', url: '', prefix: '', headers: {} };
+      var container = document.getElementById('modal-upstream-container');
+      var rowId = 'upstream-row-' + Math.random().toString(36).substring(2, 9);
+      var headersStr = JSON.stringify(data.headers || {});
+      if (headersStr === '{}') headersStr = '';
+
+      var rowHtml = document.createElement('div');
+      rowHtml.id = rowId;
+      rowHtml.className = 'p-4 rounded-xl bg-dark-bg border border-dark-border space-y-3 relative';
+      rowHtml.innerHTML = '<div class="flex items-center justify-between">' +
+        '<span class="text-xs font-bold text-slate-300">Upstream MCP Server</span>' +
+        '<button type="button" onclick="document.getElementById(\'' + rowId + '\').remove()" class="text-slate-500 hover:text-rose-400 text-xs">' +
+          '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>' +
+        '</button>' +
+      '</div>' +
+      '<div class="grid grid-cols-1 sm:grid-cols-3 gap-2">' +
+        '<input type="text" data-up-name placeholder="Server Name (e.g. GitHub MCP)" value="' + escapeHtml(data.name) + '" class="bg-dark-card border border-dark-border rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-violet-500" />' +
+        '<input type="text" data-up-prefix placeholder="Tool Prefix (e.g. gh)" value="' + escapeHtml(data.prefix) + '" class="bg-dark-card border border-dark-border rounded-lg px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-violet-500" />' +
+        '<input type="text" data-up-url placeholder="MCP URL (http://...)" value="' + escapeHtml(data.url) + '" class="bg-dark-card border border-dark-border rounded-lg px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-violet-500" />' +
+      '</div>' +
+      '<div>' +
+        '<input type="text" data-up-headers placeholder=\'Optional Auth Headers JSON (e.g. {"Authorization": "Bearer ${GITHUB_TOKEN}"})\' value="' + escapeHtml(headersStr) + '" class="w-full bg-dark-card border border-dark-border rounded-lg px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-violet-500" />' +
+      '</div>';
+
+      container.appendChild(rowHtml);
+      if (window.lucide) lucide.createIcons();
+    }
+
+    async function saveGateway() {
+      var name = document.getElementById('modal-gw-name').value.trim();
+      var slug = document.getElementById('modal-gw-slug').value.trim();
+      var desc = document.getElementById('modal-gw-desc').value.trim();
+      var saveBtn = document.getElementById('modal-save-gw-btn');
+
+      if (!name || !slug) {
+        alert('Please provide Gateway Name and URL Slug.');
+        return;
+      }
+
+      var upstreamServers = [];
+      var rows = document.querySelectorAll('#modal-upstream-container > div');
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i];
+        var uName = r.querySelector('[data-up-name]').value.trim();
+        var uUrl = r.querySelector('[data-up-url]').value.trim();
+        var uPrefix = r.querySelector('[data-up-prefix]').value.trim();
+        var uHeadersRaw = r.querySelector('[data-up-headers]').value.trim();
+        var uHeaders = {};
+        if (uHeadersRaw) {
+          try { uHeaders = JSON.parse(uHeadersRaw); } catch(e) { alert('Invalid JSON in headers: ' + e.message); return; }
+        }
+        if (uUrl) {
+          upstreamServers.push({
+            id: 'upstream-' + (i + 1),
+            name: uName || 'Upstream MCP ' + (i + 1),
+            url: uUrl,
+            prefix: uPrefix,
+            headers: uHeaders,
+            enabled: true
+          });
+        }
+      }
+
+      var payload = {
+        slug: slug,
+        name: name,
+        description: desc,
+        enabled: true,
+        included_local_tools: ["*"],
+        upstream_servers: upstreamServers
+      };
+
+      saveBtn.disabled = true;
+      try {
+        var url = editingGatewaySlug ? ('/api/gateways/' + editingGatewaySlug) : '/api/gateways';
+        var method = editingGatewaySlug ? 'PUT' : 'POST';
+        var res = await fetch(url, {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        var data = await res.json();
+        if (res.ok) {
+          closeGatewayModal();
+          await fetchGateways();
+          await fetchOverview();
+        } else {
+          alert('Error: ' + (data.detail || 'Failed to save gateway'));
+        }
+      } catch (err) {
+        alert('Network Error: ' + err.message);
+      } finally {
+        saveBtn.disabled = false;
+      }
+    }
+
+    async function deleteGateway(slug) {
+      if (!confirm('Are you sure you want to delete gateway "' + slug + '"?')) return;
+      try {
+        var res = await fetch('/api/gateways/' + slug, { method: 'DELETE' });
+        if (res.ok) {
+          await fetchGateways();
+          await fetchOverview();
+        } else {
+          var data = await res.json();
+          alert('Error: ' + (data.detail || 'Failed to delete'));
+        }
+      } catch (err) {
+        alert('Network Error: ' + err.message);
+      }
+    }
+
     // Fetch Tools
     async function fetchTools() {
       try {
         var res = await fetch('/api/dashboard/tools');
         if (!res.ok) return;
         cachedTools = await res.json();
-        renderOverviewTools(cachedTools);
         renderToolsCatalog(cachedTools);
         populatePlaygroundSelect(cachedTools);
       } catch (err) {
         console.error('Failed to fetch tools:', err);
       }
-    }
-
-    function renderOverviewTools(tools) {
-      var grid = document.getElementById('overview-tools-grid');
-      if (!grid) return;
-      grid.innerHTML = tools.slice(0, 4).map(function(t) {
-        return '<div class="p-4 rounded-xl glass-panel border border-dark-border space-y-2 hover:border-violet-500/50 transition">' +
-          '<div class="flex items-center justify-between">' +
-            '<span class="font-bold text-white text-sm font-mono">' + escapeHtml(t.name) + '</span>' +
-            '<span class="text-[11px] px-2 py-0.5 rounded bg-violet-950/60 text-violet-400 border border-violet-800/40">' + escapeHtml(t.toolkit) + '</span>' +
-          '</div>' +
-          '<p class="text-xs text-slate-400 line-clamp-2">' + escapeHtml(t.description) + '</p>' +
-          '<div class="pt-2 flex items-center justify-between">' +
-            '<span class="text-[11px] text-slate-500">' + t.parameters.length + ' parameter(s)</span>' +
-            '<button onclick="openInPlayground(\'' + escapeHtml(t.name) + '\')" class="text-xs text-violet-400 hover:text-violet-300 font-semibold flex items-center space-x-1">' +
-              '<span>Test</span>' +
-              '<i data-lucide="play" class="w-3 h-3"></i>' +
-            '</button>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-      if (window.lucide) lucide.createIcons();
     }
 
     function renderToolsCatalog(tools) {
@@ -546,7 +889,7 @@
       }
       list.innerHTML = tools.map(function(t) {
         var secretBadge = '';
-        if (t.required_secrets.length > 0) {
+        if (t.required_secrets && t.required_secrets.length > 0) {
           if (t.has_all_secrets) {
             secretBadge = '<span class="text-xs px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/50">Secrets Ready</span>';
           } else {
@@ -555,7 +898,7 @@
         }
 
         var paramsHtml = '<div class="text-[11px] text-slate-500 pt-2">No input arguments required.</div>';
-        if (t.parameters.length > 0) {
+        if (t.parameters && t.parameters.length > 0) {
           var paramsCards = t.parameters.map(function(p) {
             return '<div class="bg-dark-bg p-2.5 rounded-lg border border-dark-border text-xs space-y-1">' +
               '<div class="flex items-center justify-between">' +
@@ -577,7 +920,7 @@
             '<div class="space-y-1">' +
               '<div class="flex items-center space-x-2">' +
                 '<span class="text-base font-bold text-white font-mono">' + escapeHtml(t.name) + '</span>' +
-                '<span class="text-xs px-2 py-0.5 rounded bg-violet-950/80 text-violet-400 border border-violet-800/50 font-mono">' + escapeHtml(t.toolkit) + '</span>' +
+                '<span class="text-xs px-2 py-0.5 rounded bg-violet-950/80 text-violet-400 border border-violet-800/50 font-mono">' + escapeHtml(t.toolkit || 'Local') + '</span>' +
                 secretBadge +
               '</div>' +
               '<p class="text-xs text-slate-400">' + escapeHtml(t.description) + '</p>' +
@@ -596,19 +939,58 @@
     function filterTools() {
       var q = document.getElementById('tool-search').value.toLowerCase().trim();
       var filtered = cachedTools.filter(function(t) {
-        return t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q) || t.toolkit.toLowerCase().includes(q);
+        return t.name.toLowerCase().includes(q) || (t.description && t.description.toLowerCase().includes(q)) || (t.toolkit && t.toolkit.toLowerCase().includes(q));
       });
       renderToolsCatalog(filtered);
+    }
+
+    // Playground Handling
+    async function onPlaygroundGatewayChange() {
+      var gwSlug = document.getElementById('playground-gateway-select').value;
+      activePlaygroundGateway = gwSlug;
+      if (gwSlug === 'local') {
+        populatePlaygroundSelect(cachedTools);
+      } else {
+        try {
+          var res = await fetch('/api/gateways/' + gwSlug);
+          if (res.ok) {
+            var data = await res.json();
+            var gwTools = (data.tools || []).map(function(t) {
+              var pList = [];
+              if (t.inputSchema && t.inputSchema.properties) {
+                for (var pName in t.inputSchema.properties) {
+                  var pDef = t.inputSchema.properties[pName];
+                  pList.push({
+                    name: pName,
+                    type: pDef.type || 'string',
+                    description: pDef.description || '',
+                    required: (t.inputSchema.required && t.inputSchema.required.includes(pName))
+                  });
+                }
+              }
+              return {
+                name: t.name,
+                description: t.description || '',
+                toolkit: t.origin || 'Gateway',
+                parameters: pList
+              };
+            });
+            populatePlaygroundSelect(gwTools);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
     }
 
     function populatePlaygroundSelect(tools) {
       var select = document.getElementById('playground-tool-select');
       if (!select) return;
       select.innerHTML = tools.map(function(t) {
-        return '<option value="' + escapeHtml(t.name) + '">' + escapeHtml(t.name) + ' (' + escapeHtml(t.toolkit) + ')</option>';
+        return '<option value="' + escapeHtml(t.name) + '">' + escapeHtml(t.name) + ' (' + escapeHtml(t.toolkit || 'Local') + ')</option>';
       }).join('');
       if (tools.length > 0) {
-        loadToolInPlayground();
+        loadToolInPlayground(tools);
       }
     }
 
@@ -621,15 +1003,16 @@
       }
     }
 
-    function loadToolInPlayground() {
+    function loadToolInPlayground(toolsList) {
+      toolsList = toolsList || cachedTools;
       var toolName = document.getElementById('playground-tool-select').value;
-      var tool = cachedTools.find(function(t) { return t.name === toolName; });
+      var tool = toolsList.find(function(t) { return t.name === toolName; });
       if (!tool) return;
 
       document.getElementById('playground-tool-desc').innerText = tool.description || 'No description provided.';
       var container = document.getElementById('playground-params-container');
 
-      if (tool.parameters.length === 0) {
+      if (!tool.parameters || tool.parameters.length === 0) {
         container.innerHTML = '<div class="text-xs text-slate-500 bg-dark-bg p-3 rounded-xl border border-dark-border">This tool takes no parameters. Ready to execute!</div>';
         return;
       }
@@ -668,7 +1051,6 @@
       var outputBox = document.getElementById('playground-output-box');
       var latencyEl = document.getElementById('playground-latency');
 
-      // Collect arguments
       var args = {};
       var inputs = document.querySelectorAll('#playground-params-container [data-param]');
       inputs.forEach(function(input) {
@@ -685,15 +1067,36 @@
       btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Executing...</span>';
       if (window.lucide) lucide.createIcons();
 
+      var startTime = performance.now();
       try {
-        var res = await fetch('/api/dashboard/tools/execute', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: toolName, arguments: args })
-        });
-        var data = await res.json();
-        latencyEl.innerText = (data.execution_time_ms || 0) + ' ms';
-        outputBox.innerHTML = '<pre class="text-violet-300 whitespace-pre-wrap">' + escapeHtml(JSON.stringify(data, null, 2)) + '</pre>';
+        var res, data;
+        if (activePlaygroundGateway && activePlaygroundGateway !== 'local') {
+          // Execute via Gateway MCP JSON-RPC protocol
+          res = await fetch('/gateways/' + activePlaygroundGateway + '/mcp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: 1,
+              method: 'tools/call',
+              params: { name: toolName, arguments: args }
+            })
+          });
+          var rpcData = await res.json();
+          var elapsed = (performance.now() - startTime).toFixed(2);
+          latencyEl.innerText = elapsed + ' ms';
+          outputBox.innerHTML = '<pre class="text-violet-300 whitespace-pre-wrap">' + escapeHtml(JSON.stringify(rpcData, null, 2)) + '</pre>';
+        } else {
+          // Execute via Local API
+          res = await fetch('/api/dashboard/tools/execute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: toolName, arguments: args })
+          });
+          data = await res.json();
+          latencyEl.innerText = (data.execution_time_ms || 0) + ' ms';
+          outputBox.innerHTML = '<pre class="text-violet-300 whitespace-pre-wrap">' + escapeHtml(JSON.stringify(data, null, 2)) + '</pre>';
+        }
       } catch (err) {
         outputBox.innerHTML = '<span class="text-rose-400">Execution Error: ' + escapeHtml(err.message) + '</span>';
       } finally {
@@ -710,10 +1113,9 @@
         if (!res.ok) return;
         var data = await res.json();
 
-        // Render required secrets
         var reqList = document.getElementById('required-secrets-list');
         if (!data.required_secrets || data.required_secrets.length === 0) {
-          reqList.innerHTML = '<div class="p-4 rounded-xl glass-panel border border-dark-border text-xs text-slate-400">None of your active tools require extra API keys or secrets.</div>';
+          reqList.innerHTML = '<div class="p-4 rounded-xl glass-panel border border-dark-border text-xs text-slate-400">None of your active local tools require extra API keys or secrets.</div>';
         } else {
           reqList.innerHTML = data.required_secrets.map(function(s) {
             var statusBadge = s.is_configured ?
@@ -734,7 +1136,6 @@
           }).join('');
         }
 
-        // Render other secrets
         var otherList = document.getElementById('other-secrets-list');
         if (!data.other_configured_secrets || data.other_configured_secrets.length === 0) {
           otherList.innerHTML = '<div class="text-xs text-slate-500 col-span-full">No other custom environment variables detected.</div>';
@@ -751,7 +1152,7 @@
       }
     }
 
-    // Templates for tool creator
+    // Tool creator templates
     function loadToolTemplate(type) {
       document.getElementById('create-tool-code').value = templates[type] || templates.basic;
     }
@@ -793,7 +1194,8 @@
     // Fetch Client Snippets
     async function fetchSnippets() {
       try {
-        var res = await fetch('/api/dashboard/config-snippets');
+        var selectedGw = document.getElementById('config-gateway-select') ? document.getElementById('config-gateway-select').value : 'default';
+        var res = await fetch('/api/dashboard/config-snippets?gateway=' + encodeURIComponent(selectedGw));
         if (!res.ok) return;
         var data = await res.json();
         document.getElementById('cursor-snippet').innerText = JSON.stringify(data.cursor, null, 2);
@@ -812,7 +1214,7 @@
     function copyToClipboard(text) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(function() {
-          alert('Copied to clipboard!');
+          alert('Copied to clipboard: ' + text);
         }).catch(function(err) {
           console.error('Copy failed:', err);
         });
@@ -823,7 +1225,7 @@
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
-        alert('Copied to clipboard!');
+        alert('Copied to clipboard: ' + text);
       }
     }
 
@@ -841,7 +1243,7 @@
     document.addEventListener('DOMContentLoaded', async function() {
       if (window.lucide) lucide.createIcons();
       loadToolTemplate('basic');
-      await Promise.all([fetchOverview(), fetchTools(), fetchSecrets(), fetchSnippets()]);
+      await Promise.all([fetchOverview(), fetchGateways(), fetchTools(), fetchSecrets(), fetchSnippets()]);
       setInterval(fetchOverview, 10000);
     });
   </script>
